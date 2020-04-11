@@ -2,10 +2,6 @@ package filepersistence;
 
 import java.io.*;
 
-/**
- * We assume: Each sensor gets its own storage engine. There wont be a parameter
- * sensor name.
- */
 public interface SensorDataStorage {
 
     /**
