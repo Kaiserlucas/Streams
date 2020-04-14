@@ -96,6 +96,18 @@ public class WriteAndReadDataSet implements SensorDataStorage{
 
     }
 
+    private void writeString(OutputStream pos, String text) {
+        DataOutputStream dos = new DataOutputStream(pos);
+
+        try {
+            dos.writeUTF(text);
+        } catch (IOException ex) {
+            System.err.println("couldn’t write data (fatal)");
+            System.exit(0);
+        }
+
+    }
+
     /*
     Just as the write methods above, this is a set of read methods that read information from the file bound to
     the InputStream given as a parameter. The methods only read the next instance of the asked for data type.
@@ -108,7 +120,7 @@ public class WriteAndReadDataSet implements SensorDataStorage{
         try {
             readValue = dis.readFloat();
         } catch (IOException ex) {
-            System.err.println("couldn’t read data (fatal). File seems to be corrupted.");
+            System.err.println("couldn’t read float (fatal). File seems to be corrupted.");
             System.exit(0);
         }
 
@@ -121,7 +133,7 @@ public class WriteAndReadDataSet implements SensorDataStorage{
         try {
             readValue = dis.readLong();
         } catch (IOException ex) {
-            System.err.println("couldn’t read data (fatal). File seems to be corrupted.");
+            System.err.println("couldn’t read long (fatal). File seems to be corrupted.");
             System.exit(0);
         }
 
@@ -134,11 +146,24 @@ public class WriteAndReadDataSet implements SensorDataStorage{
         try {
             readValue = dis.readInt();
         } catch (IOException ex) {
-            System.err.println("couldn’t read data (fatal). File seems to be corrupted.");
+            System.err.println("couldn’t read int (fatal). File seems to be corrupted.");
             System.exit(0);
         }
 
         return readValue;
+    }
+
+    private String readString(InputStream pis) {
+        DataInputStream dis = new DataInputStream(pis);
+        String readText = "a";
+        try {
+            readText = dis.readUTF();
+        } catch (IOException ex) {
+            System.err.println("couldn’t read string (fatal). File seems to be corrupted.");
+            System.exit(0);
+        }
+
+        return readText;
     }
 
     @Override
@@ -170,10 +195,12 @@ public class WriteAndReadDataSet implements SensorDataStorage{
         /*
         Then write the data set to data.txt in the following format:
         1st: int -> number of temperature values in the set
-        2nd: long -> timestamp
-        3rd: float -> the temperature values themselves
+        2nd: String -> Sensor Name
+        3rd: long -> timestamp
+        4th: float -> the temperature values themselves
          */
         this.writeInt(os, valueNumber);
+        this.writeString(os, "Sensor1");
         this.writeLong(os, time);
 
         for(int i = 0; i < valueNumber; i++) {
@@ -209,6 +236,7 @@ public class WriteAndReadDataSet implements SensorDataStorage{
         // skips to the correct place in the file if the dataset parameter was bigger than 1
         for(int i = 1; i < dataset; i++) {
             int nextSetValues = readInt(is);
+            readString(is);
             for(int j = 0; j < (nextSetValues+2);j++) {
                 readFloat(is);
             }
@@ -216,6 +244,7 @@ public class WriteAndReadDataSet implements SensorDataStorage{
 
         // reads the timestamp value from the desired set and returns it
         readInt(is);
+        readString(is);
         return readLong(is);
     }
 
@@ -243,6 +272,7 @@ public class WriteAndReadDataSet implements SensorDataStorage{
         // skips to the correct place in the file if the dataset parameter was bigger than 1
         for(int i = 1; i < dataset; i++) {
             int nextSetValues = readInt(is);
+            readString(is);
             for(int j = 0; j < (nextSetValues+2);j++) {
                 readFloat(is);
             }
@@ -250,6 +280,7 @@ public class WriteAndReadDataSet implements SensorDataStorage{
 
         // writes the temperature values in the set to an array and returns it
         int numberOfValues = readInt(is);
+        readString(is);
         readLong(is);
         float[] data = new float[numberOfValues];
 
@@ -330,6 +361,7 @@ public class WriteAndReadDataSet implements SensorDataStorage{
         for(int i = 0; i < currentSize; i++) {
             System.out.println("Data set "+(i+1)+":");
             int nextSetValues = readInt(isData);
+            System.out.println("Sensor Name: "+readString(isData));
             System.out.println("Timestamp: "+readLong(isData));
             for(int j = 0; j < nextSetValues; j++) {
                 System.out.println("Value "+(j+1)+": "+readFloat(isData));
