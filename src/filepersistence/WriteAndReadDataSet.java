@@ -60,11 +60,10 @@ public class WriteAndReadDataSet implements SensorDataStorage{
     Takes an existing OutputStream and the variable you write to the file as parameters.
      */
 
-    private void writeInt(OutputStream pos, int value) {
-        DataOutputStream dos = new DataOutputStream(pos);
+    public static void writeInt(DataOutputStream pdos, int value) {
 
         try {
-            dos.writeInt(value);
+            pdos.writeInt(value);
         } catch (IOException ex) {
             System.err.println("couldn’t write data (fatal)");
             System.exit(0);
@@ -72,11 +71,10 @@ public class WriteAndReadDataSet implements SensorDataStorage{
 
     }
 
-    private void writeLong(OutputStream pos, long value) {
-        DataOutputStream dos = new DataOutputStream(pos);
+    public static void writeLong(DataOutputStream pdos, long value) {
 
         try {
-            dos.writeLong(value);
+            pdos.writeLong(value);
         } catch (IOException ex) {
             System.err.println("couldn’t write data (fatal)");
             System.exit(0);
@@ -84,11 +82,10 @@ public class WriteAndReadDataSet implements SensorDataStorage{
 
     }
 
-    private void writeFloat(OutputStream pos, float value) {
-        DataOutputStream dos = new DataOutputStream(pos);
+    public static void writeFloat(DataOutputStream pdos, float value) {
 
         try {
-            dos.writeFloat(value);
+            pdos.writeFloat(value);
         } catch (IOException ex) {
             System.err.println("couldn’t write data (fatal)");
             System.exit(0);
@@ -96,11 +93,10 @@ public class WriteAndReadDataSet implements SensorDataStorage{
 
     }
 
-    private void writeString(OutputStream pos, String text) {
-        DataOutputStream dos = new DataOutputStream(pos);
+    public static void writeString(DataOutputStream pdos, String text) {
 
         try {
-            dos.writeUTF(text);
+            pdos.writeUTF(text);
         } catch (IOException ex) {
             System.err.println("couldn’t write data (fatal)");
             System.exit(0);
@@ -114,11 +110,11 @@ public class WriteAndReadDataSet implements SensorDataStorage{
     Takes and InputStream to read from as a parameter and returns the data type specified in the method name.
      */
 
-    private float readFloat(InputStream pis) {
-        DataInputStream dis = new DataInputStream(pis);
+    public static float readFloat(DataInputStream pdis) {
+
         float readValue = -1;
         try {
-            readValue = dis.readFloat();
+            readValue = pdis.readFloat();
         } catch (IOException ex) {
             System.err.println("couldn’t read float (fatal). File seems to be corrupted.");
             System.exit(0);
@@ -127,11 +123,11 @@ public class WriteAndReadDataSet implements SensorDataStorage{
         return readValue;
     }
 
-    private long readLong(InputStream pis) {
-        DataInputStream dis = new DataInputStream(pis);
+    public static long readLong(DataInputStream pdis) {
+
         long readValue = -1;
         try {
-            readValue = dis.readLong();
+            readValue = pdis.readLong();
         } catch (IOException ex) {
             System.err.println("couldn’t read long (fatal). File seems to be corrupted.");
             System.exit(0);
@@ -140,11 +136,11 @@ public class WriteAndReadDataSet implements SensorDataStorage{
         return readValue;
     }
 
-    private int readInt(InputStream pis) {
-        DataInputStream dis = new DataInputStream(pis);
+    public static int readInt(DataInputStream pdis) {
+
         int readValue = -1;
         try {
-            readValue = dis.readInt();
+            readValue = pdis.readInt();
         } catch (IOException ex) {
             System.err.println("couldn’t read int (fatal). File seems to be corrupted.");
             System.exit(0);
@@ -153,11 +149,11 @@ public class WriteAndReadDataSet implements SensorDataStorage{
         return readValue;
     }
 
-    private String readString(InputStream pis) {
-        DataInputStream dis = new DataInputStream(pis);
+    public static String readString(DataInputStream pdis) {
+
         String readText = "a";
         try {
-            readText = dis.readUTF();
+            readText = pdis.readUTF();
         } catch (IOException ex) {
             System.err.println("couldn’t read string (fatal). File seems to be corrupted.");
             System.exit(0);
@@ -166,11 +162,32 @@ public class WriteAndReadDataSet implements SensorDataStorage{
         return readText;
     }
 
-    @Override
-    public void saveData(long time, float[] values) throws IOException {
+    private DataInputStream getDataInputStream(String filename) {
+        InputStream is = null;
+        try {
+            is = new FileInputStream(filename);
+
+        } catch (FileNotFoundException ex) {
+            System.err.println("couldn’t open file - fatal");
+            System.exit(0);
+
+        }
+
+        DataInputStream dis = null;
+        try {
+            dis = new DataInputStream(is);
+
+        } catch (Exception ex) {
+            System.err.println("couldn’t open file - fatal");
+            System.exit(0);
+
+        }
+        return dis;
+    }
+
+    private DataOutputStream getDataOutputStream(String filename) {
         OutputStream os = null;
         try {
-            String filename = "data.txt";
             os = new FileOutputStream(filename, true);
 
         } catch (FileNotFoundException ex) {
@@ -178,6 +195,45 @@ public class WriteAndReadDataSet implements SensorDataStorage{
             System.exit(0);
 
         }
+
+        DataOutputStream dos = null;
+        try {
+            dos = new DataOutputStream(os);
+
+        } catch (Exception ex) {
+            System.err.println("couldn’t open file - fatal");
+            System.exit(0);
+
+        }
+        return dos;
+    }
+
+    private DataOutputStream getDataOutputStreamNoAppend(String filename) {
+        OutputStream os = null;
+        try {
+            os = new FileOutputStream(filename);
+
+        } catch (FileNotFoundException ex) {
+            System.err.println("couldn’t open file - fatal");
+            System.exit(0);
+
+        }
+
+        DataOutputStream dos = null;
+        try {
+            dos = new DataOutputStream(os);
+
+        } catch (Exception ex) {
+            System.err.println("couldn’t open file - fatal");
+            System.exit(0);
+
+        }
+        return dos;
+    }
+
+    @Override
+    public void saveData(long time, float[] values){
+        DataOutputStream dos = getDataOutputStream("data.txt");
 
         int valueNumber = 0; // Counts the number of valid values contained inside of values[]
 
@@ -199,12 +255,12 @@ public class WriteAndReadDataSet implements SensorDataStorage{
         3rd: long -> timestamp
         4th: float -> the temperature values themselves
          */
-        this.writeInt(os, valueNumber);
-        this.writeString(os, "Sensor1");
-        this.writeLong(os, time);
+        this.writeInt(dos, valueNumber);
+        this.writeString(dos, "MyGoodOldSensor");
+        this.writeLong(dos, time);
 
         for(int i = 0; i < valueNumber; i++) {
-            this.writeFloat(os, values[i]);
+            this.writeFloat(dos, values[i]);
         }
 
         // Increase data size in size.txt by 1 to signify that a data set was added
@@ -222,30 +278,21 @@ public class WriteAndReadDataSet implements SensorDataStorage{
             throw  ex;
         }
 
-        InputStream is = null;
-        try {
-            String filename = "data.txt";
-            is = new FileInputStream(filename);
-
-        } catch (FileNotFoundException ex) {
-            System.err.println("couldn’t open file - fatal");
-            System.exit(0);
-
-        }
+        DataInputStream dis = getDataInputStream("data.txt");
 
         // skips to the correct place in the file if the dataset parameter was bigger than 1
         for(int i = 1; i < dataset; i++) {
-            int nextSetValues = readInt(is);
-            readString(is);
+            int nextSetValues = readInt(dis);
+            readString(dis);
             for(int j = 0; j < (nextSetValues+2);j++) {
-                readFloat(is);
+                readFloat(dis);
             }
         }
 
         // reads the timestamp value from the desired set and returns it
-        readInt(is);
-        readString(is);
-        return readLong(is);
+        readInt(dis);
+        readString(dis);
+        return readLong(dis);
     }
 
     @Override
@@ -258,53 +305,60 @@ public class WriteAndReadDataSet implements SensorDataStorage{
             throw  ex;
         }
 
-        InputStream is = null;
-        try {
-            String filename = "data.txt";
-            is = new FileInputStream(filename);
-
-        } catch (FileNotFoundException ex) {
-            System.err.println("couldn’t open file - fatal");
-            System.exit(0);
-
-        }
+        DataInputStream dis = getDataInputStream("data.txt");
 
         // skips to the correct place in the file if the dataset parameter was bigger than 1
         for(int i = 1; i < dataset; i++) {
-            int nextSetValues = readInt(is);
-            readString(is);
+            int nextSetValues = readInt(dis);
+            readString(dis);
             for(int j = 0; j < (nextSetValues+2);j++) {
-                readFloat(is);
+                readFloat(dis);
             }
         }
 
         // writes the temperature values in the set to an array and returns it
-        int numberOfValues = readInt(is);
-        readString(is);
-        readLong(is);
+        int numberOfValues = readInt(dis);
+        readString(dis);
+        readLong(dis);
         float[] data = new float[numberOfValues];
 
         for(int i = 0; i < numberOfValues; i++) {
-            data[i] = readFloat(is);
+            data[i] = readFloat(dis);
         }
 
         return data;
     }
 
     @Override
-    public int getSize() {
-        InputStream is = null;
-        try {
-            String filename = "size.txt";
-            is = new FileInputStream(filename);
-
-        } catch (FileNotFoundException ex) {
-            System.err.println("couldn’t open file - fatal");
-            System.exit(0);
-
+    public String getName(int dataset) throws IllegalArgumentException {
+        // checks if the parameter is valid
+        int currentSize = this.getSize();
+        if(dataset < 1 || dataset > currentSize) {
+            IllegalArgumentException ex = new IllegalArgumentException("Invalid data set exception");
+            throw  ex;
         }
+
+        DataInputStream dis = getDataInputStream("data.txt");
+
+        // skips to the correct place in the file if the dataset parameter was bigger than 1
+        for(int i = 1; i < dataset; i++) {
+            int nextSetValues = readInt(dis);
+            readString(dis);
+            for(int j = 0; j < (nextSetValues+2);j++) {
+                readFloat(dis);
+            }
+        }
+
+        // reads the sensor name from the desired set and returns it
+        readInt(dis);
+        return readString(dis);
+    }
+
+    @Override
+    public int getSize() {
+        DataInputStream dis = getDataInputStream("size.txt");
         // just returns the value written to size.txt
-        return this.readInt(is);
+        return this.readInt(dis);
     }
 
     @Override
@@ -315,56 +369,29 @@ public class WriteAndReadDataSet implements SensorDataStorage{
             IllegalArgumentException ex = new IllegalArgumentException("Negative data set size error");
             throw ex;
         }
-        OutputStream os = null;
-        try {
-            String filename = "size.txt";
-            os = new FileOutputStream(filename);
 
-        } catch (FileNotFoundException ex) {
-            System.err.println("couldn’t open file - fatal");
-            System.exit(0);
-
-        }
-
+        DataOutputStream dos = getDataOutputStreamNoAppend("size.txt");
         // just writes the parameter to size.txt
-        this.writeInt(os,size);
+        this.writeInt(dos,size);
     }
 
     @Override
     public void printAllData() {
 
-        InputStream isSize = null;
-        try {
-            String filename = "size.txt";
-            isSize = new FileInputStream(filename);
+        DataInputStream disSize = getDataInputStream("size.txt");
 
-        } catch (FileNotFoundException ex) {
-            System.err.println("couldn’t open file - fatal");
-            System.exit(0);
+        int currentSize = readInt(disSize); // saves the amount of total data sets
 
-        }
-
-        int currentSize = readInt(isSize); // saves the amount of total data sets
-
-        InputStream isData = null;
-        try {
-            String filename = "data.txt";
-            isData = new FileInputStream(filename);
-
-        } catch (FileNotFoundException ex) {
-            System.err.println("couldn’t open file - fatal");
-            System.exit(0);
-
-        }
+        DataInputStream disData = getDataInputStream("data.txt");
 
         // goes through the entire file and prints all relevant information
         for(int i = 0; i < currentSize; i++) {
             System.out.println("Data set "+(i+1)+":");
-            int nextSetValues = readInt(isData);
-            System.out.println("Sensor Name: "+readString(isData));
-            System.out.println("Timestamp: "+readLong(isData));
+            int nextSetValues = readInt(disData);
+            System.out.println("Sensor Name: "+readString(disData));
+            System.out.println("Timestamp: "+readLong(disData));
             for(int j = 0; j < nextSetValues; j++) {
-                System.out.println("Value "+(j+1)+": "+readFloat(isData));
+                System.out.println("Value "+(j+1)+": "+readFloat(disData));
             }
             System.out.println("");
         }
@@ -374,29 +401,11 @@ public class WriteAndReadDataSet implements SensorDataStorage{
     public void deleteAllData() {
 
         //Empties both data.txt and size.txt of all data / creates them if they do not exist yet
-        OutputStream os = null;
-        try {
-            String filename = "data.txt";
-            os = new FileOutputStream(filename);
-
-        } catch (FileNotFoundException ex) {
-            System.err.println("couldn’t open file - fatal");
-            System.exit(0);
-
-        }
-        OutputStream os2 = null;
-        try {
-            String filename = "size.txt";
-            os2 = new FileOutputStream(filename);
-
-        } catch (FileNotFoundException ex) {
-            System.err.println("couldn’t open file - fatal");
-            System.exit(0);
-
-        }
+        getDataOutputStreamNoAppend("data.txt");
+        DataOutputStream dos = getDataOutputStreamNoAppend("size.txt");
 
         // initializes size.txt with the value 0
-        writeInt(os2,0);
+        writeInt(dos,0);
     }
 }
 

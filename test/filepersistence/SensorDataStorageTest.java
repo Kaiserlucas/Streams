@@ -59,6 +59,18 @@ public class SensorDataStorageTest {
     }
 
     @Test
+    public void gutTestSaveAndReadName() throws IOException{
+        SensorDataStorage SDS = new WriteAndReadDataSet();
+        SDS.deleteAllData();
+        long testValue = 55;
+        float[] testArray = {1, -7, 2};
+        SDS.saveData(testValue, testArray);
+        SDS.saveData(testValue, testArray);
+        String name = "MyGoodOldSensor";
+        Assert.assertEquals(name,SDS.getName(2));
+    }
+
+    @Test
     public void schlechtTestSaveAndReadLong() throws IllegalArgumentException, IOException {
         SensorDataStorage SDS = new WriteAndReadDataSet();
         SDS.deleteAllData();

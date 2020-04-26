@@ -8,9 +8,8 @@ public interface SensorDataStorage {
      * This method can be called by a sensor to save a data set.
      * @param time UNIX time when measurement took place
      * @param values sensor data
-     * @throws IOException if something unexpected happened. Insufficient right, medium broken, offline..
      */
-    void saveData(long time, float[] values) throws IOException;
+    void saveData(long time, float[] values);
 
     /**
      * This method returns the timestamp of a data set specified by the parameter
@@ -29,10 +28,19 @@ public interface SensorDataStorage {
     float[] getValues(int dataset) throws IllegalArgumentException;
 
     /**
+     * This method returns the sensor name saved in the data set specified by the parameter
+     * @param dataset number of the data set you want the values of
+     * @return sensor name of the specific data set
+     * @throws IllegalArgumentException if the dataset parameter is negative or bigger than the number of saved sets
+     */
+    String getName(int dataset) throws IllegalArgumentException;
+
+    /**
      * This method reads the current number of saved data sets from the size.txt file
      * @return current amount of data sets
      */
     int getSize();
+
 
     /**
      * This method writes the amount of data sets into the size.txt file
