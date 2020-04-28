@@ -4,9 +4,10 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class DataConnector implements DataConnection {
+public class DataConnector implements DataConnection, Runnable {
 
     Socket socket;
+    int port;
 
     /**
      * Create client side - open connection to address / port
@@ -25,12 +26,9 @@ public class DataConnector implements DataConnection {
      * @param port
      */
     public DataConnector(int port) {
-        try {
-            ServerSocket server = new ServerSocket(port);
-            socket = server.accept();
-        } catch(IOException ex) {
-
-        }
+        this.port = port;
+        Thread acceptThread = new Thread(this);
+        acceptThread.start();
     }
 
     @Override
@@ -55,5 +53,16 @@ public class DataConnector implements DataConnection {
         }
         DataOutputStream dos = new DataOutputStream(os);
         return dos;
+    }
+
+
+    @Override
+    public void run() {
+        try {
+            ServerSocket server = new ServerSocket(port);
+            socket = server.accept();
+        } catch(IOException ex) {
+
+        }
     }
 }
