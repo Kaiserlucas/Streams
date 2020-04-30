@@ -7,7 +7,7 @@ import transmission.DataConnection;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-public class SensorDataReceiver {
+public class SensorDataReceiver implements Runnable {
     private final DataConnection connection;
     private final SensorDataStorage storage;
 
@@ -20,7 +20,7 @@ public class SensorDataReceiver {
         return storage;
     }
 
-    public void receiveAndWriteData() throws IOException {
+    private void receiveAndWriteDataInternal() throws IOException {
         DataInputStream tcpDataInputStream;
         try {
             tcpDataInputStream = connection.getDataInputStream();
@@ -36,5 +36,20 @@ public class SensorDataReceiver {
             values[i] = WriteAndReadDataSet.readFloat(tcpDataInputStream);
         }
         storage.saveData(time, values);
+    }
+
+    public void receiveAndWriteData() throws IOException {
+        Thread writeThread = new Thread(this);
+        writeThread.start();
+    }
+
+    @Override
+    public void run() {
+        try {
+            receiveAndWriteDataInternal();
+        } catch(IOException ex) {
+            System.err.println(ex.getMessage());
+            System.err.println("Couldn't read data");
+        }
     }
 }

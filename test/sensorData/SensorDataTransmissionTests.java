@@ -58,6 +58,13 @@ public class SensorDataTransmissionTests {
 
         sensorDataReceiver.receiveAndWriteData();
 
+        //Test is too fast and checks file before the receiver is done writing -> Pause this thread for a short time
+        try {
+            Thread.sleep(100);
+        } catch(InterruptedException ex) {
+            System.out.println("Something went wrong in the test thread");
+        }
+
         // Get values from storage
         String sensorNameReceived = dataStorageReceived.getName(1);
         long timeStampReceived = dataStorageReceived.getTimestamp(1);

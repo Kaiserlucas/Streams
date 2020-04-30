@@ -34,11 +34,7 @@ public class DataConnector implements DataConnection, Runnable {
     @Override
     public DataInputStream getDataInputStream() throws IOException {
         InputStream is;
-        try {
-            is = socket.getInputStream();
-        } catch(IOException ex) {
-            throw ex;
-        }
+        is = socket.getInputStream();
         DataInputStream dis = new DataInputStream(is);
         return dis;
     }
@@ -46,11 +42,7 @@ public class DataConnector implements DataConnection, Runnable {
     @Override
     public DataOutputStream getDataOutputStream() throws IOException {
         OutputStream os;
-        try {
-            os = socket.getOutputStream();
-        } catch(IOException ex) {
-            throw ex;
-        }
+        os = socket.getOutputStream();
         DataOutputStream dos = new DataOutputStream(os);
         return dos;
     }
