@@ -7,7 +7,7 @@ import java.net.Socket;
 public class DataConnector implements DataConnection, Runnable {
 
     Socket socket;
-    int port;
+    private int port;
 
     /**
      * Create client side - open connection to address / port
