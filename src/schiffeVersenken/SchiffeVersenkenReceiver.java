@@ -19,7 +19,7 @@ public interface SchiffeVersenkenReceiver {
      * @throws IOException
      * @throws StatusException Wenn nicht im Zustand "Versenken (Empfangen)"
      */
-    void receiveKoordinate(int zeile, int spalte) throws IOException, StatusException;
+    void receiveKoordinate(int zeile, int spalte) throws IOException, StatusException, SchiffeVersenkenException;
 
     /**
      * Erlaubt im Zustand "Versenken (Empfangen)", führt zu "Spiel beenden"
@@ -34,6 +34,6 @@ public interface SchiffeVersenkenReceiver {
      * @throws IOException
      * @throws StatusException Wenn nicht im Zustand "Bestätigen (Empfangen)"
      */
-    void receiveBestaetigen(int status) throws IOException, StatusException;
+    void receiveBestaetigen(int status) throws IOException, StatusException, SchiffeVersenkenException;
 
 }

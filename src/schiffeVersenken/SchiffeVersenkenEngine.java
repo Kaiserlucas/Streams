@@ -8,9 +8,15 @@ public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, Schiffe
     private int sentDice = UNDEFINED_DICE;
     private int anzahlVersenktGegner = 0;
     private int anzahlVersenktSelber = 0;
+    private int lastShotX;
+    private int lastShotY;
+    private boolean gewonnen;
+
+    private SchiffeVersenkenBoard ownBoard = new SchiffeVersenkenBoard();
+    private SchiffeVersenkenBoard opponentBoard = new SchiffeVersenkenBoard();
 
     public SchiffeVersenkenEngine() {
-        this.status = SchiffeVersenkenStatus.SPIELSTART;
+        this.status = SchiffeVersenkenStatus.PLACE_SHIPS;
     }
 
 
@@ -31,12 +37,45 @@ public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, Schiffe
     }
 
     @Override
-    public void receiveKoordinate(int zeile, int spalte) throws IOException, StatusException  {
+    public void receiveKoordinate(int zeile, int spalte) throws IOException, StatusException, SchiffeVersenkenException  {
         if(this.status != SchiffeVersenkenStatus.VERSENKEN_E) {
             throw new StatusException();
         }
 
+        FeedbackStatus feedback;
+        BoardSpace space = ownBoard.getSpace(zeile, spalte);
+        if(space == BoardSpace.WATER) {
+            feedback = FeedbackStatus.NO_HIT;
+            ownBoard.setSpace(zeile, spalte, BoardSpace.SHOT_WATER);
+        } else if(space == BoardSpace.SHIP) {
+            ownBoard.setSpace(zeile, spalte, BoardSpace.SHOT_SHIP);
+            if(ownBoard.checkSunk(zeile, spalte)) {
+                feedback = FeedbackStatus.HIT_AND_SUNK;
+                try {
+                    ownBoard.setSunk(zeile, spalte);
+                } catch (Exception e) {
+                    System.err.println(e.getMessage());
+                }
+            } else {
+                feedback = FeedbackStatus.HIT;
+            }
+        } else {
+            feedback = FeedbackStatus.NO_HIT;
+        }
+
         this.status = SchiffeVersenkenStatus.BESTAETIGEN_S;
+        switch(feedback) {
+            case HIT:
+                sendBestaetigen(0);
+                break;
+            case NO_HIT:
+                sendBestaetigen(1);
+                break;
+            case HIT_AND_SUNK:
+                sendBestaetigen(2);
+                break;
+        }
+
     }
 
     @Override
@@ -45,23 +84,42 @@ public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, Schiffe
             throw new StatusException();
         }
 
+        gewonnen = true;
         this.status = SchiffeVersenkenStatus.SPIELENDE;
     }
 
     @Override
-    public void receiveBestaetigen(int status) throws IOException, StatusException  {
+    public void receiveBestaetigen(int status) throws IOException, StatusException, SchiffeVersenkenException {
         if(this.status != SchiffeVersenkenStatus.BESTAETIGEN_E) {
             throw new StatusException();
         }
 
-        if(status == 2) {
-            anzahlVersenktGegner++;
+        switch(status) {
+            case 0:
+                ownBoard.setSpace(lastShotX, lastShotY, BoardSpace.SHOT_SHIP);
+                break;
+            case 1:
+                ownBoard.setSpace(lastShotX, lastShotY, BoardSpace.SHOT_WATER);
+                break;
+            case 2:
+                anzahlVersenktGegner++;
+                ownBoard.setSpace(lastShotX, lastShotY, BoardSpace.SHOT_SHIP);
+                try {
+                    ownBoard.setSunk(lastShotX, lastShotY);
+                } catch (Exception e) {
+                    System.err.print(e.getMessage());
+                }
+                break;
+            default:
+                System.err.print("Critical Error. Garbage feedback received.");
+                break;
         }
 
 
         if(anzahlVersenktGegner < 10) {
             this.status = SchiffeVersenkenStatus.VERSENKEN_E;
         } else {
+            gewonnen = true;
             this.status = SchiffeVersenkenStatus.SPIELENDE;
         }
     }
@@ -84,6 +142,8 @@ public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, Schiffe
             throw new StatusException();
         }
 
+        lastShotX = zeile;
+        lastShotY = spalte;
         //TODO: Sende Werte über TCP
 
         this.status = SchiffeVersenkenStatus.BESTAETIGEN_E;
@@ -98,6 +158,7 @@ public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, Schiffe
 
         //TODO: Sende Kapitulation
 
+        gewonnen = false;
         this.status = SchiffeVersenkenStatus.SPIELENDE;
 
     }
@@ -116,6 +177,7 @@ public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, Schiffe
         if(anzahlVersenktSelber < 10) {
             this.status = SchiffeVersenkenStatus.VERSENKEN_S;
         } else {
+            gewonnen = false;
             this.status = SchiffeVersenkenStatus.SPIELENDE;
         }
 
