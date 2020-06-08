@@ -1,38 +1,61 @@
 package schiffeVersenken;
 
+import schiffeVersenken.protocolBinding.StreamBindingSender;
+import transmission.DataConnector;
+
 import java.io.IOException;
 
 public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, SchiffeVersenkenSender {
     public static final int UNDEFINED_DICE = -1;
     private SchiffeVersenkenStatus status;
     private int sentDice = UNDEFINED_DICE;
+    private int receivedDice = UNDEFINED_DICE;
     private int anzahlVersenktGegner = 0;
     private int anzahlVersenktSelber = 0;
     private int lastShotX;
     private int lastShotY;
     private boolean gewonnen;
+    private StreamBindingSender sender;
 
     private SchiffeVersenkenBoard ownBoard = new SchiffeVersenkenBoard();
     private SchiffeVersenkenBoard opponentBoard = new SchiffeVersenkenBoard();
 
-    public SchiffeVersenkenEngine() {
-        this.status = SchiffeVersenkenStatus.PLACE_SHIPS;
+    public SchiffeVersenkenEngine(DataConnector connection) {
+        try {
+            this.sender = new StreamBindingSender(connection.getDataOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Connection issue. Can't send data.");
+            System.exit(-1);
+        }
+        this.status = SchiffeVersenkenStatus.SPIELSTART;
     }
 
 
     @Override
     public void receiveReihenfolgeWuerfeln(int random) throws IOException, StatusException  {
-        if(this.status != SchiffeVersenkenStatus.DICE_SENT) {
-            throw new StatusException();
+
+        switch(status) {
+            case SPIELSTART:
+                receivedDice = random;
+                this.status = SchiffeVersenkenStatus.DICE_RECEIVED;
+                break;
+            case DICE_SENT:
+
+                if(random > sentDice) {
+                    this.status = SchiffeVersenkenStatus.VERSENKEN_E;
+                } else if (random < sentDice) {
+                    this.status = SchiffeVersenkenStatus.VERSENKEN_S;
+                } else {
+                    this.status = SchiffeVersenkenStatus.SPIELSTART;
+                }
+                break;
+
+            default:
+                throw new StatusException();
         }
 
-        if(random > sentDice) {
-            this.status = SchiffeVersenkenStatus.VERSENKEN_E;
-        } else if (random < sentDice) {
-            this.status = SchiffeVersenkenStatus.VERSENKEN_S;
-        } else {
-            this.status = SchiffeVersenkenStatus.SPIELSTART;
-        }
+
 
     }
 
@@ -96,16 +119,16 @@ public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, Schiffe
 
         switch(status) {
             case 0:
-                ownBoard.setSpace(lastShotX, lastShotY, BoardSpace.SHOT_SHIP);
+                opponentBoard.setSpace(lastShotX, lastShotY, BoardSpace.SHOT_SHIP);
                 break;
             case 1:
-                ownBoard.setSpace(lastShotX, lastShotY, BoardSpace.SHOT_WATER);
+                opponentBoard.setSpace(lastShotX, lastShotY, BoardSpace.SHOT_WATER);
                 break;
             case 2:
                 anzahlVersenktGegner++;
-                ownBoard.setSpace(lastShotX, lastShotY, BoardSpace.SHOT_SHIP);
+                opponentBoard.setSpace(lastShotX, lastShotY, BoardSpace.SHOT_SHIP);
                 try {
-                    ownBoard.setSunk(lastShotX, lastShotY);
+                    opponentBoard.setSunk(lastShotX, lastShotY);
                 } catch (Exception e) {
                     System.err.print(e.getMessage());
                 }
@@ -126,12 +149,29 @@ public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, Schiffe
 
     @Override
     public void sendReihenfolgeWuerfeln(int random) throws IOException, StatusException {
-        if(this.status != SchiffeVersenkenStatus.SPIELSTART) {
-            throw new StatusException();
-        }
 
-        //TODO: Sende Wert über TCP
-        this.sentDice = random;
+
+
+        switch(status) {
+            case SPIELSTART:
+                this.sentDice = random;
+                sender.sendReihenfolgeWuerfeln(random);
+                this.status = SchiffeVersenkenStatus.DICE_SENT;
+                break;
+            case DICE_RECEIVED:
+
+                if(random > receivedDice) {
+                    this.status = SchiffeVersenkenStatus.VERSENKEN_S;
+                } else if (random < receivedDice) {
+                    this.status = SchiffeVersenkenStatus.VERSENKEN_E;
+                } else {
+                    this.status = SchiffeVersenkenStatus.SPIELSTART;
+                }
+
+                break;
+            default:
+                throw new StatusException();
+        }
 
         this.status = SchiffeVersenkenStatus.DICE_SENT;
     }
@@ -144,7 +184,7 @@ public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, Schiffe
 
         lastShotX = zeile;
         lastShotY = spalte;
-        //TODO: Sende Werte über TCP
+        sender.sendKoordinate(zeile, spalte);
 
         this.status = SchiffeVersenkenStatus.BESTAETIGEN_E;
 
@@ -156,7 +196,7 @@ public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, Schiffe
             throw new StatusException();
         }
 
-        //TODO: Sende Kapitulation
+        sender.sendKapitulation();
 
         gewonnen = false;
         this.status = SchiffeVersenkenStatus.SPIELENDE;
@@ -169,7 +209,7 @@ public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, Schiffe
             throw new StatusException();
         }
 
-        //TODO: Sende Status
+        sender.sendBestaetigen(status);
         if(status == 2) {
             anzahlVersenktSelber++;
         }
