@@ -15,7 +15,7 @@ public interface SchiffeVersenkenSender {
      * @param zeile
      * @param spalte
      */
-    void sendKoordinate(int zeile, int spalte) throws IOException, StatusException;
+    void sendKoordinate(int zeile, int spalte) throws IOException, StatusException, SchiffeVersenkenException;
 
     /**
      * Erlaubt im Zustand "Versenken (Senden)", führt zu "Spiel beenden"
@@ -26,6 +26,6 @@ public interface SchiffeVersenkenSender {
      * Erlaubt im Zustand "Bestätigen (Senden)", führt zu "Versenken (Senden)" oder "Spielende"
      * @param status 0 = Treffer; 1 = Verfehlt; 2 = Versenkt
      */
-    void sendBestaetigen(int status) throws IOException, StatusException;
+    void sendBestaetigen(int status) throws IOException, StatusException, SchiffeVersenkenException;
 
 }

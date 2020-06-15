@@ -4,8 +4,9 @@ import schiffeVersenken.protocolBinding.StreamBindingSender;
 import transmission.DataConnector;
 
 import java.io.IOException;
+import java.util.Random;
 
-public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, SchiffeVersenkenSender {
+public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, SchiffeVersenkenUsage {
     public static final int UNDEFINED_DICE = -1;
     private SchiffeVersenkenStatus status;
     private int sentDice = UNDEFINED_DICE;
@@ -15,22 +16,19 @@ public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, Schiffe
     private int lastShotX;
     private int lastShotY;
     private boolean gewonnen;
-    private StreamBindingSender sender;
+    private SchiffeVersenkenSender sender;
 
     private SchiffeVersenkenBoard ownBoard = new SchiffeVersenkenBoard();
     private SchiffeVersenkenBoard opponentBoard = new SchiffeVersenkenBoard();
 
-    public SchiffeVersenkenEngine(DataConnector connection) {
-        try {
-            this.sender = new StreamBindingSender(connection.getDataOutputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.err.println("Connection issue. Can't send data.");
-            System.exit(-1);
-        }
+    public SchiffeVersenkenEngine(SchiffeVersenkenSender sender) {
+        this.sender = sender;
         this.status = SchiffeVersenkenStatus.SPIELSTART;
     }
 
+    //////////////////////////////////////////////////////////////////////////////////////////
+    ////                              Receive Methods                                     ////
+    //////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void receiveReihenfolgeWuerfeln(int random) throws IOException, StatusException  {
@@ -147,15 +145,19 @@ public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, Schiffe
         }
     }
 
-    @Override
+
+    //////////////////////////////////////////////////////////////////////////////////////////
+    ////                                 Send Methods                                     ////
+    //////////////////////////////////////////////////////////////////////////////////////////
+
+
     public void sendReihenfolgeWuerfeln(int random) throws IOException, StatusException {
 
-
+        sender.sendReihenfolgeWuerfeln(random);
 
         switch(status) {
             case SPIELSTART:
                 this.sentDice = random;
-                sender.sendReihenfolgeWuerfeln(random);
                 this.status = SchiffeVersenkenStatus.DICE_SENT;
                 break;
             case DICE_RECEIVED:
@@ -176,8 +178,7 @@ public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, Schiffe
         this.status = SchiffeVersenkenStatus.DICE_SENT;
     }
 
-    @Override
-    public void sendKoordinate(int zeile, int spalte) throws IOException, StatusException {
+    public void sendKoordinate(int zeile, int spalte) throws IOException, StatusException, SchiffeVersenkenException {
         if(this.status != SchiffeVersenkenStatus.VERSENKEN_S) {
             throw new StatusException();
         }
@@ -190,7 +191,6 @@ public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, Schiffe
 
     }
 
-    @Override
     public void sendKapitulation() throws IOException, StatusException {
         if(this.status != SchiffeVersenkenStatus.VERSENKEN_S) {
             throw new StatusException();
@@ -203,8 +203,7 @@ public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, Schiffe
 
     }
 
-    @Override
-    public void sendBestaetigen(int status) throws IOException, StatusException {
+    public void sendBestaetigen(int status) throws IOException, StatusException, SchiffeVersenkenException {
         if(this.status != SchiffeVersenkenStatus.BESTAETIGEN_S) {
             throw new StatusException();
         }
@@ -221,5 +220,75 @@ public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, Schiffe
             this.status = SchiffeVersenkenStatus.SPIELENDE;
         }
 
+    }
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////
+    ////                                Usage Methods                                     ////
+    //////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void doDice() throws StatusException, IOException {
+        Random randomGenerator = new Random();
+        int random = randomGenerator.nextInt();
+        sender.sendReihenfolgeWuerfeln(random);
+
+        switch(status) {
+            case SPIELSTART:
+                this.sentDice = random;
+                this.status = SchiffeVersenkenStatus.DICE_SENT;
+                break;
+            case DICE_RECEIVED:
+
+                if(random > receivedDice) {
+                    this.status = SchiffeVersenkenStatus.VERSENKEN_S;
+                } else if (random < receivedDice) {
+                    this.status = SchiffeVersenkenStatus.VERSENKEN_E;
+                } else {
+                    this.status = SchiffeVersenkenStatus.SPIELSTART;
+                }
+
+                break;
+            default:
+                throw new StatusException();
+        }
+
+    }
+
+    @Override
+    public boolean isMyTurn() {
+        return this.status == SchiffeVersenkenStatus.VERSENKEN_S;
+    }
+
+    @Override
+    public void doTurn(int x, int y) throws SchiffeVersenkenException, StatusException, IOException {
+
+        if(this.status != SchiffeVersenkenStatus.VERSENKEN_S) {
+            throw new StatusException();
+        }
+
+        lastShotX = x;
+        lastShotY = y;
+        this.status = SchiffeVersenkenStatus.BESTAETIGEN_E;
+        sender.sendKoordinate(x, y);
+
+    }
+
+    @Override
+    public void giveUp() throws StatusException, IOException {
+
+        if(this.status != SchiffeVersenkenStatus.VERSENKEN_S) {
+            throw new StatusException();
+        }
+
+        sender.sendKapitulation();
+
+        gewonnen = false;
+        this.status = SchiffeVersenkenStatus.SPIELENDE;
+
+    }
+
+    public SchiffeVersenkenStatus getStatus() {
+        return this.status;
     }
 }
