@@ -291,4 +291,20 @@ public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, Schiffe
     public SchiffeVersenkenStatus getStatus() {
         return this.status;
     }
+
+    public void setDebugBoard() throws SchiffeVersenkenException {
+        ownBoard.setSpace(0,0, BoardSpace.SHIP);
+        ownBoard.setSpace(0,1, BoardSpace.SHIP);
+        ownBoard.setSpace(0,2, BoardSpace.SHIP);
+
+        ownBoard.setSpace(2,2, BoardSpace.SHIP);
+        ownBoard.setSpace(3,3, BoardSpace.SHIP);
+        ownBoard.setSpace(4,4, BoardSpace.SHIP);
+        ownBoard.setSpace(5,5, BoardSpace.SHIP);
+        ownBoard.setSpace(6,6, BoardSpace.SHIP);
+        ownBoard.setSpace(7,7, BoardSpace.SHIP);
+        ownBoard.setSpace(8,8, BoardSpace.SHIP);
+        ownBoard.setSpace(9,9, BoardSpace.SHIP);
+        ownBoard.setSpace(0,5, BoardSpace.SHIP);
+    }
 }
