@@ -135,6 +135,87 @@ public class SchiffeVersenkenBoard {
 
     }
 
+    public boolean checkValidShipPosition(int zeile1, int spalte1, int zeile2, int spalte2) throws SchiffeVersenkenException {
+
+        if(zeile1 < 0 || zeile1 > 9 || zeile2 < 0 || zeile2 > 9 || spalte1 < 0 || spalte1 > 9 || spalte2 < 0 || spalte2 > 9) {
+            throw new SchiffeVersenkenException();
+        }
+
+        boolean noBrokenRules = true;
+
+        if(spalte1 == spalte2) {
+
+            for(int momentaneZeile = Math.min(zeile1,zeile2); momentaneZeile <= Math.max(zeile1,zeile2); momentaneZeile++) {
+                if(spalte1-1 >= 0 && getSpace(momentaneZeile, spalte1-1) == BoardSpace.SHIP) {
+                    noBrokenRules = false;
+                }
+                if(spalte1+1 <= 9 && getSpace(momentaneZeile, spalte1+1) == BoardSpace.SHIP) {
+                    noBrokenRules = false;
+                }
+            }
+
+            int minZeile = Math.min(zeile1,zeile2);
+            int maxZeile = Math.max(zeile1,zeile2);
+
+            if(minZeile-1 >= 0 && getSpace(minZeile-1, spalte1) == BoardSpace.SHIP) {
+                noBrokenRules = false;
+            }
+            if(maxZeile+1 <= 9 && getSpace(maxZeile+1, spalte1) == BoardSpace.SHIP) {
+                noBrokenRules = false;
+            }
+
+        } else if(zeile1 == zeile2) {
+
+            for(int momentaneSpalte = Math.min(spalte1,spalte2); momentaneSpalte <= Math.max(spalte1,spalte2); momentaneSpalte++) {
+                if(zeile1-1 >= 0 && getSpace(zeile1-1, momentaneSpalte) == BoardSpace.SHIP) {
+                    noBrokenRules = false;
+                }
+                if(zeile1+1 <= 9 && getSpace(zeile1+1, momentaneSpalte) == BoardSpace.SHIP) {
+                    noBrokenRules = false;
+                }
+            }
+
+            int minSpalte = Math.min(spalte1, spalte2);
+            int maxSpalte = Math.max(spalte1, spalte2);
+
+            if(minSpalte-1 >= 0 && getSpace(zeile1, minSpalte-1) == BoardSpace.SHIP) {
+                noBrokenRules = false;
+            }
+            if(maxSpalte+1 <= 9 && getSpace(zeile1, maxSpalte+1) == BoardSpace.SHIP) {
+                noBrokenRules = false;
+            }
+
+        } else {
+            return false;
+        }
+
+        return noBrokenRules;
+    }
+
+    public void setShip(int zeile1, int spalte1, int zeile2, int spalte2) throws SchiffeVersenkenException  {
+
+        if(zeile1 < 0 || zeile1 > 9 || zeile2 < 0 || zeile2 > 9 || spalte1 < 0 || spalte1 > 9 || spalte2 < 0 || spalte2 > 9) {
+            throw new SchiffeVersenkenException();
+        }
+
+        if(spalte1 == spalte2) {
+
+            for(int momentaneZeile = Math.min(zeile1,zeile2); momentaneZeile <= Math.max(zeile1,zeile2); momentaneZeile++) {
+                setSpace(momentaneZeile, spalte1, BoardSpace.SHIP);
+            }
+
+        } else if(zeile1 == zeile2) {
+
+            for(int momentaneSpalte = Math.min(spalte1,spalte2); momentaneSpalte <= Math.max(spalte1,spalte2); momentaneSpalte++) {
+                setSpace(zeile1, momentaneSpalte, BoardSpace.SHIP);
+            }
+
+        } else {
+            throw new SchiffeVersenkenException();
+        }
+
+    }
+
     private char getSymbol(BoardSpace space) {
         switch(space){
             case WATER:
@@ -150,9 +231,5 @@ public class SchiffeVersenkenBoard {
         }
         return ' ';
     }
-
-
-
-
 
 }

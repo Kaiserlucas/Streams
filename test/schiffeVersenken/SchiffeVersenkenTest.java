@@ -1,13 +1,7 @@
-package SchiffeVersenken;
+package schiffeVersenken;
 
 import org.junit.Assert;
 import org.junit.Test;
-import schiffeVersenken.*;
-import schiffeVersenken.SchiffeVersenkenException;
-import schiffeVersenken.StatusException;
-import schiffeVersenken.SchiffeVersenkenEngine;
-import schiffeVersenken.SchiffeVersenkenUsage;
-import schiffeVersenken.SchiffeVersenkenStatus;
 
 import java.io.IOException;
 
@@ -153,5 +147,6 @@ public class SchiffeVersenkenTest {
         assert(otherGame.getStatus() == SchiffeVersenkenStatus.SPIELENDE);
 
     }
+
 
 }

@@ -37,13 +37,15 @@ public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, Schiffe
             case SPIELSTART:
                 receivedDice = random;
                 this.status = SchiffeVersenkenStatus.DICE_RECEIVED;
+                System.out.println("Dice Received");
                 break;
             case DICE_SENT:
-
                 if(random > sentDice) {
                     this.status = SchiffeVersenkenStatus.VERSENKEN_E;
+                    System.out.println("Versenken E");
                 } else if (random < sentDice) {
                     this.status = SchiffeVersenkenStatus.VERSENKEN_S;
+                    System.out.println("Versenken S");
                 } else {
                     this.status = SchiffeVersenkenStatus.SPIELSTART;
                 }
@@ -84,6 +86,7 @@ public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, Schiffe
             feedback = FeedbackStatus.NO_HIT;
         }
 
+        System.out.println("Ich bin "+status+" und bestätige.");
         this.status = SchiffeVersenkenStatus.BESTAETIGEN_S;
         switch(feedback) {
             case HIT:
@@ -150,59 +153,6 @@ public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, Schiffe
     ////                                 Send Methods                                     ////
     //////////////////////////////////////////////////////////////////////////////////////////
 
-
-    public void sendReihenfolgeWuerfeln(int random) throws IOException, StatusException {
-
-        sender.sendReihenfolgeWuerfeln(random);
-
-        switch(status) {
-            case SPIELSTART:
-                this.sentDice = random;
-                this.status = SchiffeVersenkenStatus.DICE_SENT;
-                break;
-            case DICE_RECEIVED:
-
-                if(random > receivedDice) {
-                    this.status = SchiffeVersenkenStatus.VERSENKEN_S;
-                } else if (random < receivedDice) {
-                    this.status = SchiffeVersenkenStatus.VERSENKEN_E;
-                } else {
-                    this.status = SchiffeVersenkenStatus.SPIELSTART;
-                }
-
-                break;
-            default:
-                throw new StatusException();
-        }
-
-        this.status = SchiffeVersenkenStatus.DICE_SENT;
-    }
-
-    public void sendKoordinate(int zeile, int spalte) throws IOException, StatusException, SchiffeVersenkenException {
-        if(this.status != SchiffeVersenkenStatus.VERSENKEN_S) {
-            throw new StatusException();
-        }
-
-        lastShotX = zeile;
-        lastShotY = spalte;
-        sender.sendKoordinate(zeile, spalte);
-
-        this.status = SchiffeVersenkenStatus.BESTAETIGEN_E;
-
-    }
-
-    public void sendKapitulation() throws IOException, StatusException {
-        if(this.status != SchiffeVersenkenStatus.VERSENKEN_S) {
-            throw new StatusException();
-        }
-
-        sender.sendKapitulation();
-
-        gewonnen = false;
-        this.status = SchiffeVersenkenStatus.SPIELENDE;
-
-    }
-
     public void sendBestaetigen(int status) throws IOException, StatusException, SchiffeVersenkenException {
         if(this.status != SchiffeVersenkenStatus.BESTAETIGEN_S) {
             throw new StatusException();
@@ -237,15 +187,19 @@ public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, Schiffe
             case SPIELSTART:
                 this.sentDice = random;
                 this.status = SchiffeVersenkenStatus.DICE_SENT;
+                System.out.println("Dice Sent");
                 break;
             case DICE_RECEIVED:
 
                 if(random > receivedDice) {
                     this.status = SchiffeVersenkenStatus.VERSENKEN_S;
+                    System.out.println("Versenken S");
                 } else if (random < receivedDice) {
                     this.status = SchiffeVersenkenStatus.VERSENKEN_E;
+                    System.out.println("Versenken E");
                 } else {
                     this.status = SchiffeVersenkenStatus.SPIELSTART;
+                    System.out.println("Spielstart");
                 }
 
                 break;
@@ -288,9 +242,45 @@ public class SchiffeVersenkenEngine implements SchiffeVersenkenReceiver, Schiffe
 
     }
 
+    @Override
     public SchiffeVersenkenStatus getStatus() {
         return this.status;
     }
+
+    @Override
+    public void printOwnBoard() {
+        System.out.println("Eigenes Spielfeld: ");
+        ownBoard.printBoard();
+        System.out.println();
+    }
+
+    @Override
+    public void printOpponentBoard() {
+        System.out.println("Gegnerisches Spielfeld: ");
+        opponentBoard.printBoard();
+        System.out.println();
+    }
+
+    @Override
+    public boolean setShip(int zeile1, int zeile2, int spalte1, int spalte2) throws StatusException, SchiffeVersenkenException {
+        if(this.status != SchiffeVersenkenStatus.DICE_RECEIVED && this.status != SchiffeVersenkenStatus.SPIELSTART) {
+            throw new StatusException();
+        }
+
+        if(!ownBoard.checkValidShipPosition(zeile1, zeile2, spalte1, spalte2)) {
+            return false;
+        } else {
+            ownBoard.setShip(zeile1, zeile2, spalte1, spalte2);
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean checkWon() {
+        return gewonnen;
+    }
+
 
     public void setDebugBoard() throws SchiffeVersenkenException {
         ownBoard.setSpace(0,0, BoardSpace.SHIP);

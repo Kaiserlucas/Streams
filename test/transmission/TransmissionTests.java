@@ -12,7 +12,7 @@ public class TransmissionTests {
     private static final int TEST_INT = 42;
 
     @Test
-    public void gutConnectionTest1() throws IOException {
+    public void gutConnectionTest1() throws IOException, InterruptedException {
         // open server side
         DataConnection serverSide = new DataConnector(PORTNUMBER);
 

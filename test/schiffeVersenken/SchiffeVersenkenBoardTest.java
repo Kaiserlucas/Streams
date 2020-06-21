@@ -1,10 +1,7 @@
-package SchiffeVersenken;
+package schiffeVersenken;
 
 import org.junit.Assert;
 import org.junit.Test;
-import schiffeVersenken.BoardSpace;
-import schiffeVersenken.SchiffeVersenkenBoard;
-import schiffeVersenken.SchiffeVersenkenException;
 
 public class SchiffeVersenkenBoardTest {
 
@@ -13,6 +10,15 @@ public class SchiffeVersenkenBoardTest {
         SchiffeVersenkenBoard board = new SchiffeVersenkenBoard();
         board.setSpace(1, 2, BoardSpace.SHOT_WATER);
         assert(board.getSpace(1,2) == BoardSpace.SHOT_WATER);
+
+        board.setShip(7,5,7,9);
+        assert(board.getSpace(7,5) == BoardSpace.SHIP);
+        assert(board.getSpace(7,6) == BoardSpace.SHIP);
+        assert(board.getSpace(7,7) == BoardSpace.SHIP);
+        assert(board.getSpace(7,8) == BoardSpace.SHIP);
+        assert(board.getSpace(7,9) == BoardSpace.SHIP);
+
+
     }
 
     @Test
@@ -27,6 +33,8 @@ public class SchiffeVersenkenBoardTest {
         board.setSpace(3, 6, BoardSpace.SUNK_SHIP);
         board.setSpace(4, 6, BoardSpace.SUNK_SHIP);
         board.setSpace(5, 6, BoardSpace.SUNK_SHIP);
+
+        board.setShip(7,5,7,9);
         board.printBoard();
 
     }
@@ -70,5 +78,17 @@ public class SchiffeVersenkenBoardTest {
         assert(board.getSpace(4, 6) == BoardSpace.SUNK_SHIP);
         assert(board.getSpace(5, 6) == BoardSpace.SUNK_SHIP);
     }
+
+    @Test
+    public void checkValidShipTest() throws SchiffeVersenkenException {
+
+        SchiffeVersenkenBoard board = new SchiffeVersenkenBoard();
+        assert(board.checkValidShipPosition(7,5,7,9));
+        board.setShip(7,4,3,4);
+        assert(!board.checkValidShipPosition(7,5,7,9));
+        assert(board.checkValidShipPosition(1,1,1,4));
+    }
+
+
 
 }

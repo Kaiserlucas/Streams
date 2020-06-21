@@ -26,4 +26,14 @@ public interface SchiffeVersenkenUsage {
      * End the game prematurely
      */
     void giveUp() throws StatusException, IOException;
+
+    SchiffeVersenkenStatus getStatus();
+
+    void printOwnBoard();
+
+    void printOpponentBoard();
+
+    boolean setShip(int zeile1, int zeile2, int spalte1, int spalte2) throws StatusException, SchiffeVersenkenException;
+
+    boolean checkWon();
 }

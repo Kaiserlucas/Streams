@@ -15,6 +15,8 @@ public class StreamBindingSender implements SchiffeVersenkenSender {
         this.dos = new DataOutputStream(os);
     }
 
+    public StreamBindingSender(DataOutputStream dos) { this.dos = dos; }
+
     @Override
     public void sendReihenfolgeWuerfeln(int random) throws IOException, StatusException {
         this.dos.writeInt(Commands.DICE);

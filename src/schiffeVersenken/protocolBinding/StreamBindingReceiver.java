@@ -17,15 +17,23 @@ public class StreamBindingReceiver extends Thread {
         this.receiver = receiever;
     }
 
+    public StreamBindingReceiver(DataInputStream dis, SchiffeVersenkenReceiver receiver) {
+        this.dis = dis;
+        this.receiver = receiver;
+    }
+
 
     public void readReihenfolgeWuerfeln() throws IOException, StatusException {
         int random = dis.readInt();
         this.receiver.receiveReihenfolgeWuerfeln(random);
+
     }
 
     public void readKoordinate() throws IOException, StatusException, SchiffeVersenkenException  {
+        System.out.println("Ich habe Koordinate");
         int x = dis.readInt();
         int y = dis.readInt();
+        System.out.println(x+" "+ y);
         this.receiver.receiveKoordinate(x,y);
     }
 

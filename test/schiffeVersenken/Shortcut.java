@@ -1,9 +1,4 @@
-package SchiffeVersenken;
-
-import schiffeVersenken.SchiffeVersenkenException;
-import schiffeVersenken.SchiffeVersenkenReceiver;
-import schiffeVersenken.SchiffeVersenkenSender;
-import schiffeVersenken.StatusException;
+package schiffeVersenken;
 
 import java.io.IOException;
 
