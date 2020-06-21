@@ -88,7 +88,7 @@ public class SchiffeVersenkenUI {
         }
 
         while(engine.getStatus() != SchiffeVersenkenStatus.SPIELENDE) {
-            System.out.println("Anfang");
+            System.out.print(" ");
             if(engine.getStatus() == SchiffeVersenkenStatus.VERSENKEN_E) {
                 engine.printOwnBoard();
                 engine.printOpponentBoard();
@@ -134,9 +134,10 @@ public class SchiffeVersenkenUI {
                     }
                 }
             }
-            System.out.println("Ende");
+            System.out.print(" ");
         }
 
+        System.out.println("");
         if(engine.checkWon()) {
             System.out.println("Herzlichen Glückwunsch! Alle feindlichen Schiffe wurden erfolgreich versenkt.");
         } else {

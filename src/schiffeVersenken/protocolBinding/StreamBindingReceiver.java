@@ -30,10 +30,10 @@ public class StreamBindingReceiver extends Thread {
     }
 
     public void readKoordinate() throws IOException, StatusException, SchiffeVersenkenException  {
-        System.out.println("Ich habe Koordinate");
+        System.out.print(" ");
         int x = dis.readInt();
         int y = dis.readInt();
-        System.out.println(x+" "+ y);
+        System.out.print(" ");
         this.receiver.receiveKoordinate(x,y);
     }
 
